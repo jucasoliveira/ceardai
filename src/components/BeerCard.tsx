@@ -1,46 +1,58 @@
+import Link from "next/link";
 import { Beer } from "@/data/beers";
 
 export default function BeerCard({ beer }: { beer: Beer }) {
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-      {/* Placeholder image area */}
-      <div
-        className="h-48 flex items-center justify-center"
-        style={{ backgroundColor: beer.color + "20" }}
-      >
+    <Link href={`/our-beers/${beer.id}`} className="group block">
+      <div className="bg-white rounded-lg overflow-hidden shadow-exhibit hover:shadow-exhibit-hover transition-all duration-300">
+        {/* Artwork: prominent color block */}
         <div
-          className="w-16 h-24 rounded-sm"
-          style={{ backgroundColor: beer.color }}
-        ></div>
-      </div>
-
-      <div className="p-6">
-        <h3 className="font-serif text-2xl mb-1">{beer.name}</h3>
-        <div className="flex items-center gap-3 text-sm text-charcoal/60 mb-4">
-          <span>{beer.style}</span>
-          <span className="text-charcoal/30">|</span>
-          <span className="font-medium">{beer.abv} ABV</span>
+          className="h-64 flex items-center justify-center"
+          style={{ backgroundColor: beer.color + "15" }}
+        >
+          <div
+            className="w-20 h-32 rounded-sm transition-transform duration-300 group-hover:scale-105 shadow-md"
+            style={{ backgroundColor: beer.color }}
+          />
         </div>
 
-        <p className="text-charcoal/70 text-sm leading-relaxed mb-4">
-          {beer.description}
-        </p>
-
-        <div className="border-t border-charcoal/10 pt-4 space-y-3">
-          <div>
-            <h4 className="text-xs uppercase tracking-widest text-charcoal/50 mb-1">
-              Tasting Notes
-            </h4>
-            <p className="text-sm text-charcoal/70">{beer.tastingNotes}</p>
+        <div className="p-8">
+          <h3 className="font-serif text-2xl mb-2 group-hover:text-amber transition-colors">
+            {beer.name}
+          </h3>
+          <div className="flex items-center gap-3 text-sm text-charcoal/60 mb-4">
+            <span className="uppercase tracking-wider text-xs">
+              {beer.style}
+            </span>
+            <span className="text-charcoal/20">|</span>
+            <span className="font-mono text-xs">{beer.abv} ABV</span>
           </div>
-          <div>
-            <h4 className="text-xs uppercase tracking-widest text-charcoal/50 mb-1">
-              Food Pairing
-            </h4>
-            <p className="text-sm text-charcoal/70">{beer.foodPairing}</p>
+
+          <p className="text-charcoal/70 text-sm leading-relaxed mb-6">
+            {beer.description}
+          </p>
+
+          <div className="border-t border-charcoal/10 pt-5 space-y-4">
+            <div>
+              <h4 className="text-xs uppercase tracking-[0.2em] text-charcoal/50 mb-1">
+                Tasting Notes
+              </h4>
+              <p className="text-sm text-charcoal/70">{beer.tastingNotes}</p>
+            </div>
+            <div>
+              <h4 className="text-xs uppercase tracking-[0.2em] text-charcoal/50 mb-1">
+                Food Pairing
+              </h4>
+              <p className="text-sm text-charcoal/70">{beer.foodPairing}</p>
+            </div>
+          </div>
+
+          {/* View exhibit prompt */}
+          <div className="mt-6 text-xs uppercase tracking-widest text-charcoal/40 group-hover:text-amber transition-colors">
+            View Exhibit &rarr;
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

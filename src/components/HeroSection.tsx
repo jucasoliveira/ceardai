@@ -1,4 +1,22 @@
-export default function HeroSection() {
+import Link from "next/link";
+import CountdownTimer from "@/components/CountdownTimer";
+import StatusBadge from "@/components/StatusBadge";
+import type { BatchStatus } from "@/types";
+
+interface ActiveBatchInfo {
+  batchNumber: number;
+  beerName: string;
+  beerColor: string;
+  status: BatchStatus;
+  countdownTarget: string;
+  countdownLabel: string;
+}
+
+export default function HeroSection({
+  activeBatch,
+}: {
+  activeBatch?: ActiveBatchInfo | null;
+}) {
   return (
     <section className="relative bg-charcoal text-cream py-32 px-4">
       {/* Subtle overlay pattern */}
@@ -13,10 +31,42 @@ export default function HeroSection() {
         </p>
         <div className="w-16 h-px bg-amber mx-auto mb-8"></div>
         <p className="text-cream/60 max-w-2xl mx-auto leading-relaxed">
-          A nano brewery rooted in tradition, guided by craft. Each batch is small,
-          each beer is intentional. From the west of Ireland, we brew with patience
-          and purpose.
+          A nano brewery rooted in tradition, guided by craft. Each batch is
+          small, each beer is intentional. From the west of Ireland, we brew
+          with patience and purpose.
         </p>
+
+        {/* Active batch countdown */}
+        {activeBatch && (
+          <Link href="/beer-sales" className="group block mt-12">
+            <div className="inline-block bg-cream/5 border border-cream/10 rounded-xl px-8 py-6 hover:bg-cream/10 transition-colors">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: activeBatch.beerColor }}
+                />
+                <span className="font-mono text-xs text-cream/40 tracking-[0.3em]">
+                  BATCH No. {String(activeBatch.batchNumber).padStart(3, "0")}
+                </span>
+                <StatusBadge status={activeBatch.status} />
+              </div>
+
+              <h2 className="font-serif text-2xl mb-4 group-hover:text-amber transition-colors">
+                {activeBatch.beerName}
+              </h2>
+
+              <p className="text-xs uppercase tracking-[0.2em] text-cream/40 mb-4">
+                {activeBatch.countdownLabel}
+              </p>
+
+              <CountdownTimer targetDate={activeBatch.countdownTarget} />
+
+              <p className="mt-4 text-sm text-amber uppercase tracking-widest group-hover:text-amber/80 transition-colors">
+                View details &rarr;
+              </p>
+            </div>
+          </Link>
+        )}
       </div>
     </section>
   );

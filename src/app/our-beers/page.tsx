@@ -7,6 +7,9 @@ export default function OurBeers() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
+          <p className="text-xs uppercase tracking-[0.3em] text-charcoal/40 mb-4">
+            The Collection
+          </p>
           <h1 className="font-serif text-4xl md:text-5xl mb-4">Our Beers</h1>
           <div className="w-16 h-px bg-amber mx-auto mb-6"></div>
           <p className="text-charcoal/60 max-w-2xl mx-auto leading-relaxed">
@@ -16,7 +19,7 @@ export default function OurBeers() {
         </div>
 
         {/* Beer cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {beers.map((beer) => (
             <BeerCard key={beer.id} beer={beer} />
           ))}

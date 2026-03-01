@@ -14,10 +14,16 @@ const config: Config = {
         amber: "#b5651d",
         forest: "#2d5016",
         burgundy: "#722f37",
+        gold: "#c9a84c",
       },
       fontFamily: {
         serif: ["Playfair Display", "Georgia", "serif"],
         sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"],
+      },
+      boxShadow: {
+        exhibit: "0 2px 8px rgba(0,0,0,0.08)",
+        "exhibit-hover": "0 4px 16px rgba(0,0,0,0.12)",
       },
     },
   },

@@ -1,8 +1,33 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables
+
+Create a `.env.local` file in the project root with the following variables:
+
+```bash
+# MongoDB connection string
+MONGODB_URI=mongodb://localhost:27017/ceardai
+
+# Better Auth secret — generate with: openssl rand -base64 32
+BETTER_AUTH_SECRET=your-secret-here
+
+# Better Auth base URL (server-side)
+BETTER_AUTH_URL=http://localhost:3000
+
+# Better Auth base URL (client-side)
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+```
+
+| Variable | Description |
+|----------|-------------|
+| `MONGODB_URI` | MongoDB connection URI. Must point to a running MongoDB instance. |
+| `BETTER_AUTH_SECRET` | Secret key used by Better Auth for signing sessions. Generate a secure value with `openssl rand -base64 32`. |
+| `BETTER_AUTH_URL` | The base URL of the application, used server-side by Better Auth. |
+| `NEXT_PUBLIC_BETTER_AUTH_URL` | Same base URL, exposed to the client for the auth client SDK. |
+
 ## Getting Started
 
-First, run the development server:
+Make sure MongoDB is running, then start the development server:
 
 ```bash
 npm run dev

@@ -1,5 +1,23 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import HeroSection from "@/components/HeroSection";
+import connectDB from "@/lib/mongodb";
+import Batch from "@/models/Batch";
+import type { BatchStatus } from "@/types";
+
+function getCountdownInfo(batch: { status: string; earlyAccessOpensAt: Date; liveSaleOpensAt: Date; saleEndsAt: Date }) {
+  switch (batch.status) {
+    case "announced":
+      return { target: batch.earlyAccessOpensAt.toISOString(), label: "Early Access Opens In" };
+    case "early_access":
+      return { target: batch.liveSaleOpensAt.toISOString(), label: "Live Sale Opens In" };
+    case "live":
+      return { target: batch.saleEndsAt.toISOString(), label: "Sale Ends In" };
+    default:
+      return null;
+  }
+}
 
 const pillars = [
   {
@@ -22,10 +40,37 @@ const pillars = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  let activeBatchInfo = null;
+
+  try {
+    await connectDB();
+    const batch = await Batch.findOne({
+      status: { $in: ["announced", "early_access", "live"] },
+    })
+      .sort({ batchNumber: -1 })
+      .lean();
+
+    if (batch) {
+      const countdown = getCountdownInfo(batch as { status: string; earlyAccessOpensAt: Date; liveSaleOpensAt: Date; saleEndsAt: Date });
+      if (countdown) {
+        activeBatchInfo = {
+          batchNumber: batch.batchNumber,
+          beerName: batch.beerName,
+          beerColor: batch.beerColor,
+          status: batch.status as BatchStatus,
+          countdownTarget: countdown.target,
+          countdownLabel: countdown.label,
+        };
+      }
+    }
+  } catch {
+    // DB not available — hero renders without countdown
+  }
+
   return (
     <>
-      <HeroSection />
+      <HeroSection activeBatch={activeBatchInfo} />
 
       {/* Philosophy section */}
       <section className="py-20 px-4">
