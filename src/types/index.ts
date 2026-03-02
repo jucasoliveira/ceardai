@@ -48,13 +48,29 @@ export interface OrderSummary {
   createdAt: string;
 }
 
+export type InviteStatus = "pending" | "sent" | "accepted";
+
+export type WaitingListStatus = "waiting" | "promoted" | "expired";
+
 export interface FounderSummary {
   _id: string;
   userId: string;
   name: string;
+  email: string;
   spotNumber: number;
   allocationPerBatch: number;
   isActive: boolean;
+  inviteStatus: InviteStatus;
+  hasUsedInvite: boolean;
+}
+
+export interface WaitingListEntry {
+  _id: string;
+  name: string;
+  email: string;
+  invitedBy: string | null;
+  status: WaitingListStatus;
+  createdAt: string;
 }
 
 export interface VoteSummary {

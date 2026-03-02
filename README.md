@@ -16,6 +16,9 @@ BETTER_AUTH_URL=http://localhost:3000
 
 # Better Auth base URL (client-side)
 NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+
+# Resend API key for invite emails
+RESEND_API_KEY=re_xxxxxxxxx
 ```
 
 | Variable | Description |
@@ -24,6 +27,7 @@ NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
 | `BETTER_AUTH_SECRET` | Secret key used by Better Auth for signing sessions. Generate a secure value with `openssl rand -base64 32`. |
 | `BETTER_AUTH_URL` | The base URL of the application, used server-side by Better Auth. |
 | `NEXT_PUBLIC_BETTER_AUTH_URL` | Same base URL, exposed to the client for the auth client SDK. |
+| `RESEND_API_KEY` | API key from [Resend](https://resend.com) for sending founder invite emails. |
 
 ## Getting Started
 

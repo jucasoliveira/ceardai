@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export function middleware(request: NextRequest) {
+  // Allow invite acceptance page without auth (it's the sign-up flow)
+  if (request.nextUrl.pathname.startsWith("/founders/accept")) {
+    return NextResponse.next();
+  }
+
   const sessionCookie =
     request.cookies.get("better-auth.session_token") ||
     request.cookies.get("__Secure-better-auth.session_token");
@@ -15,5 +20,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/portal/:path*", "/admin/:path*"],
+  matcher: ["/portal/:path*", "/admin/:path*", "/founders/:path*"],
 };

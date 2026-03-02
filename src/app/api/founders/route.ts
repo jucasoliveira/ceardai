@@ -5,7 +5,21 @@ import { getServerSession } from "@/lib/get-session";
 
 export async function GET() {
   try {
+    const session = await getServerSession();
+    const userTier = session
+      ? (session.user as { tier?: string }).tier
+      : null;
+
     await connectDB();
+
+    // Admin and founders get full data; public gets name + spotNumber only
+    if (userTier === "admin" || userTier === "founder") {
+      const founders = await Founder.find({ isActive: true })
+        .sort({ spotNumber: 1 })
+        .lean();
+      return NextResponse.json(founders);
+    }
+
     const founders = await Founder.find({ isActive: true })
       .select("name spotNumber")
       .sort({ spotNumber: 1 })

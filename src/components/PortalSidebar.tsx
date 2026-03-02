@@ -8,6 +8,7 @@ import type { UserTier } from "@/types";
 interface PortalSidebarProps {
   userName: string;
   userTier: UserTier;
+  hasUsedInvite?: boolean;
 }
 
 const baseLinks = [
@@ -17,17 +18,23 @@ const baseLinks = [
   { href: "/portal/account", label: "Account" },
 ];
 
-const founderLinks = [
-  { href: "/portal", label: "Dashboard" },
-  { href: "/portal/orders", label: "Orders" },
-  { href: "/portal/early-access", label: "Early Access" },
-  { href: "/portal/vote", label: "Vote" },
-  { href: "/portal/account", label: "Account" },
-];
+function getFounderLinks(hasUsedInvite: boolean) {
+  const links = [
+    { href: "/portal", label: "Dashboard" },
+    { href: "/portal/orders", label: "Orders" },
+    { href: "/portal/early-access", label: "Early Access" },
+    { href: "/portal/vote", label: "Vote" },
+  ];
+  if (!hasUsedInvite) {
+    links.push({ href: "/portal/invite", label: "Invite" });
+  }
+  links.push({ href: "/portal/account", label: "Account" });
+  return links;
+}
 
-export default function PortalSidebar({ userName, userTier }: PortalSidebarProps) {
+export default function PortalSidebar({ userName, userTier, hasUsedInvite = false }: PortalSidebarProps) {
   const pathname = usePathname();
-  const links = userTier === "founder" ? founderLinks : baseLinks;
+  const links = userTier === "founder" ? getFounderLinks(hasUsedInvite) : baseLinks;
 
   function isActive(href: string) {
     if (href === "/portal") return pathname === "/portal";

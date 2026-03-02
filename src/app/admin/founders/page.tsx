@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { FounderSummary } from "@/types";
+import type { FounderSummary, WaitingListEntry } from "@/types";
 
 interface Slot {
   spotNumber: number;
@@ -10,12 +10,14 @@ interface Slot {
 
 export default function AdminFoundersPage() {
   const [founders, setFounders] = useState<FounderSummary[]>([]);
+  const [waitingList, setWaitingList] = useState<WaitingListEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState<number | null>(null);
   const [name, setName] = useState("");
-  const [userId, setUserId] = useState("");
+  const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const fetchFounders = useCallback(async () => {
     try {
@@ -29,9 +31,22 @@ export default function AdminFoundersPage() {
     }
   }, []);
 
+  const fetchWaitingList = useCallback(async () => {
+    try {
+      const res = await fetch("/api/founders/waiting-list");
+      if (res.ok) {
+        const data = await res.json();
+        setWaitingList(data);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
     fetchFounders();
-  }, [fetchFounders]);
+    fetchWaitingList();
+  }, [fetchFounders, fetchWaitingList]);
 
   const slots: Slot[] = Array.from({ length: 14 }, (_, i) => {
     const spotNumber = i + 1;
@@ -44,37 +59,35 @@ export default function AdminFoundersPage() {
   function openAddForm(spotNumber: number) {
     setShowForm(spotNumber);
     setName("");
-    setUserId("");
+    setEmail("");
     setError("");
+    setSuccess("");
   }
 
-  async function handleAdd(e: React.FormEvent) {
+  async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
     if (!showForm) return;
     setError("");
+    setSuccess("");
     setSaving(true);
 
     try {
-      const res = await fetch("/api/founders", {
+      const res = await fetch("/api/founders/invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          userId,
-          spotNumber: showForm,
-          allocationPerBatch: 5,
-          isActive: true,
-        }),
+        body: JSON.stringify({ name, email }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Failed to add founder");
+        setError(data.error || "Failed to send invite");
         return;
       }
 
+      setSuccess(data.message);
       setShowForm(null);
       fetchFounders();
+      fetchWaitingList();
     } catch {
       setError("Something went wrong");
     } finally {
@@ -91,6 +104,42 @@ export default function AdminFoundersPage() {
     } catch {
       console.error("Failed to remove founder");
     }
+  }
+
+  async function handlePromote(entryId: string) {
+    if (!confirm("Promote this person from the waiting list?")) return;
+
+    try {
+      const res = await fetch("/api/founders/waiting-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryId }),
+      });
+
+      if (res.ok) {
+        fetchFounders();
+        fetchWaitingList();
+      }
+    } catch {
+      console.error("Failed to promote");
+    }
+  }
+
+  function inviteStatusBadge(status: string) {
+    const styles: Record<string, string> = {
+      sent: "bg-amber/20 text-amber",
+      accepted: "bg-forest/20 text-forest",
+      pending: "bg-charcoal/10 text-charcoal/60",
+    };
+    return (
+      <span
+        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide ${
+          styles[status] || styles.pending
+        }`}
+      >
+        {status}
+      </span>
+    );
   }
 
   if (loading) {
@@ -129,24 +178,37 @@ export default function AdminFoundersPage() {
             </p>
             <p className="text-3xl font-serif text-forest">{14 - filledCount}</p>
           </div>
+          <div>
+            <p className="text-xs uppercase tracking-widest text-charcoal/40 mb-1">
+              Waiting List
+            </p>
+            <p className="text-3xl font-serif text-amber">{waitingList.length}</p>
+          </div>
         </div>
       </div>
 
-      {/* Add Founder Form */}
+      {/* Success message */}
+      {success && (
+        <div className="mb-6 p-3 bg-forest/10 text-forest text-sm rounded-lg">
+          {success}
+        </div>
+      )}
+
+      {/* Invite Founder Form */}
       {showForm && (
         <div className="bg-white rounded-xl shadow-exhibit p-6 mb-8">
           <h2 className="font-serif text-lg text-charcoal mb-4">
-            Add Founder — Spot #{showForm}
+            Invite Founder — Spot #{showForm}
           </h2>
           {error && (
             <div className="mb-4 p-3 bg-burgundy/10 text-burgundy text-sm rounded-lg">
               {error}
             </div>
           )}
-          <form onSubmit={handleAdd} className="space-y-4 max-w-md">
+          <form onSubmit={handleInvite} className="space-y-4 max-w-md">
             <div>
               <label className="block text-xs uppercase tracking-widest text-charcoal/60 mb-2">
-                Name (on label)
+                Name
               </label>
               <input
                 type="text"
@@ -159,18 +221,18 @@ export default function AdminFoundersPage() {
             </div>
             <div>
               <label className="block text-xs uppercase tracking-widest text-charcoal/60 mb-2">
-                User ID
+                Email
               </label>
               <input
-                type="text"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="User ID from members list"
+                placeholder="founder@example.com"
                 className="w-full px-4 py-3 bg-white border border-charcoal/10 rounded-lg focus:outline-none focus:border-amber transition-colors"
               />
               <p className="text-xs text-charcoal/40 mt-1">
-                Find the User ID in Admin &rarr; Members
+                An invite email will be sent to this address
               </p>
             </div>
             <div className="flex gap-3">
@@ -179,7 +241,7 @@ export default function AdminFoundersPage() {
                 disabled={saving}
                 className="bg-charcoal text-cream px-6 py-2.5 rounded-lg text-sm uppercase tracking-widest hover:bg-charcoal/90 transition-colors disabled:opacity-50"
               >
-                {saving ? "Adding..." : "Add Founder"}
+                {saving ? "Sending..." : "Send Invite"}
               </button>
               <button
                 type="button"
@@ -212,6 +274,9 @@ export default function AdminFoundersPage() {
                 <p className="text-sm font-medium text-charcoal truncate mb-1">
                   {founder.name}
                 </p>
+                <div className="mb-2">
+                  {inviteStatusBadge(founder.inviteStatus)}
+                </div>
                 <p className="text-xs text-charcoal/40 mb-3">
                   {founder.allocationPerBatch} bottles/batch
                 </p>
@@ -229,7 +294,7 @@ export default function AdminFoundersPage() {
                   onClick={() => openAddForm(spotNumber)}
                   className="text-xs text-amber hover:text-amber/80 uppercase tracking-widest transition-colors"
                 >
-                  + Add
+                  + Invite
                 </button>
               </>
             )}
@@ -237,7 +302,7 @@ export default function AdminFoundersPage() {
         ))}
       </div>
 
-      {/* Founder List Table */}
+      {/* Founder Details Table */}
       {founders.length > 0 && (
         <div className="bg-white rounded-xl shadow-exhibit overflow-hidden mt-8">
           <div className="p-6 border-b border-charcoal/10">
@@ -256,13 +321,16 @@ export default function AdminFoundersPage() {
                     Name
                   </th>
                   <th className="text-left px-6 py-3 text-xs uppercase tracking-widest text-charcoal/40 font-medium">
+                    Email
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-widest text-charcoal/40 font-medium">
+                    Invite
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-widest text-charcoal/40 font-medium">
                     Allocation
                   </th>
                   <th className="text-left px-6 py-3 text-xs uppercase tracking-widest text-charcoal/40 font-medium">
-                    Status
-                  </th>
-                  <th className="text-left px-6 py-3 text-xs uppercase tracking-widest text-charcoal/40 font-medium">
-                    User ID
+                    Used Invite
                   </th>
                 </tr>
               </thead>
@@ -276,22 +344,74 @@ export default function AdminFoundersPage() {
                       #{founder.spotNumber}
                     </td>
                     <td className="px-6 py-3 text-charcoal">{founder.name}</td>
+                    <td className="px-6 py-3 text-charcoal/70 text-xs">
+                      {founder.email}
+                    </td>
+                    <td className="px-6 py-3">
+                      {inviteStatusBadge(founder.inviteStatus)}
+                    </td>
                     <td className="px-6 py-3 text-charcoal/70">
                       {founder.allocationPerBatch} bottles/batch
                     </td>
-                    <td className="px-6 py-3">
-                      <span
-                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium uppercase tracking-wide ${
-                          founder.isActive
-                            ? "bg-forest/20 text-forest"
-                            : "bg-burgundy/20 text-burgundy"
-                        }`}
-                      >
-                        {founder.isActive ? "Active" : "Inactive"}
-                      </span>
+                    <td className="px-6 py-3 text-charcoal/60 text-xs">
+                      {founder.hasUsedInvite ? "Yes" : "No"}
                     </td>
-                    <td className="px-6 py-3 text-charcoal/40 font-mono text-xs">
-                      {founder.userId}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Waiting List */}
+      {waitingList.length > 0 && (
+        <div className="bg-white rounded-xl shadow-exhibit overflow-hidden mt-8">
+          <div className="p-6 border-b border-charcoal/10">
+            <h2 className="font-serif text-lg text-charcoal">Waiting List</h2>
+            <p className="text-xs text-charcoal/40 mt-1">
+              People waiting for a founder spot to open up
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-charcoal/10">
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-widest text-charcoal/40 font-medium">
+                    Name
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-widest text-charcoal/40 font-medium">
+                    Email
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-widest text-charcoal/40 font-medium">
+                    Added
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-widest text-charcoal/40 font-medium">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {waitingList.map((entry) => (
+                  <tr
+                    key={entry._id}
+                    className="border-b border-charcoal/5 hover:bg-cream/50 transition-colors"
+                  >
+                    <td className="px-6 py-3 text-charcoal">{entry.name}</td>
+                    <td className="px-6 py-3 text-charcoal/70 text-xs">
+                      {entry.email}
+                    </td>
+                    <td className="px-6 py-3 text-charcoal/50 text-xs">
+                      {new Date(entry.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-3">
+                      <button
+                        onClick={() => handlePromote(entry._id)}
+                        disabled={filledCount >= 14}
+                        className="text-xs text-amber hover:text-amber/80 uppercase tracking-widest transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        Promote
+                      </button>
                     </td>
                   </tr>
                 ))}
